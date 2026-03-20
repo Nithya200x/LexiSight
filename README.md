@@ -1,5 +1,5 @@
-## <!---
-
+<!---
+---
 title: LexiSight
 emoji: 📝
 colorFrom: indigo
@@ -8,7 +8,6 @@ sdk: docker
 pinned: false
 
 ---
-
 -->
 
 # LexiSight
