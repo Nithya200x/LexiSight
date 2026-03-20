@@ -1,3 +1,11 @@
+---
+title: LexiSight
+emoji: 📝
+colorFrom: indigo
+colorTo: teal
+sdk: docker
+pinned: false
+---
 # LexiSight
 
 > Handwritten text extraction from images — built with TrOCR, FastAPI, and OpenCV.
@@ -19,10 +27,12 @@ Upload a photo of handwritten text. LexiSight detects the lines, preprocesses ea
 ## Demo
 
 > Run locally in demo mode (no model download needed):
+>
 > ```powershell
 > $env:LEXISIGHT_DEMO="1"
 > python -m uvicorn app.main:app --reload --port 8000
 > ```
+>
 > Open **http://localhost:8000**
 
 ---
@@ -131,10 +141,10 @@ Image uploaded
 
 ### `POST /ocr`
 
-| Field          | Type         | Required | Description                          |
-|----------------|--------------|----------|--------------------------------------|
-| `file`         | image        | ✅        | JPEG, PNG, WebP, BMP, TIFF — max 10MB |
-| `ground_truth` | string       | ❌        | Reference text for accuracy scoring  |
+| Field          | Type   | Required | Description                           |
+| -------------- | ------ | -------- | ------------------------------------- |
+| `file`         | image  | ✅       | JPEG, PNG, WebP, BMP, TIFF — max 10MB |
+| `ground_truth` | string | ❌       | Reference text for accuracy scoring   |
 
 **Response**
 
@@ -162,8 +172,8 @@ Image uploaded
 
 Computed from scratch using dynamic programming — no external metric libraries.
 
-| Metric | Formula |
-|--------|---------|
+| Metric  | Formula                                              |
+| ------- | ---------------------------------------------------- |
 | **CER** | `levenshtein(ref_chars, hyp_chars) / len(ref_chars)` |
 | **WER** | `levenshtein(ref_words, hyp_words) / len(ref_words)` |
 
@@ -209,7 +219,7 @@ Tests cover the metrics, postprocessing, detector, preprocessor, and all API end
 ## Tech Stack
 
 | Layer       | Technology                               |
-|-------------|------------------------------------------|
+| ----------- | ---------------------------------------- |
 | Model       | TrOCR — microsoft/trocr-base-handwritten |
 | Backend     | FastAPI + Uvicorn                        |
 | Image I/O   | Pillow                                   |
