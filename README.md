@@ -1,11 +1,15 @@
----
+## <!---
+
 title: LexiSight
 emoji: 📝
 colorFrom: indigo
 colorTo: purple
 sdk: docker
 pinned: false
+
 ---
+
+-->
 
 # LexiSight
 
@@ -16,6 +20,16 @@ pinned: false
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.3-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
 ![OpenCV](https://img.shields.io/badge/OpenCV-4.9-5C3EE8?style=flat-square&logo=opencv&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)
+
+---
+
+## 🌐 Live Demo
+
+Try it now — no installation needed:
+
+**👉 https://nithya200x-lexisight.hf.space**
+
+> Hosted on HuggingFace Spaces · Docker · Free tier
 
 ---
 
@@ -229,6 +243,29 @@ Tests cover the metrics, postprocessing, detector, preprocessor, and all API end
 | Validation  | Pydantic v2                              |
 | Frontend    | Vanilla HTML / CSS / JS                  |
 | Tests       | pytest                                   |
+
+---
+
+## Known Limitations
+
+- Runs in demo mode on Hugging Face due to memory limits — full TrOCR inference requires ~2GB RAM
+- Struggles with heavy cursive handwriting
+- English only — other languages not supported
+- Skewed or overlapping lines reduce detection accuracy
+- No multi-page or PDF support
+- Cold start on first request takes a few seconds
+
+---
+
+## Future Improvements
+
+- [ ] Multi-language OCR support
+- [ ] PDF and multi-page upload
+- [ ] Auto deskew before line detection
+- [ ] Per-line confidence scores
+- [ ] Batch image processing
+- [ ] OCR history with user accounts
+- [ ] Fine-tune model on specific domains (medical, legal)
 
 ---
 
