@@ -1,4 +1,4 @@
-<!---
+
 ---
 title: LexiSight
 emoji: 📝
@@ -8,7 +8,6 @@ sdk: docker
 pinned: false
 
 ---
--->
 
 # LexiSight
 
