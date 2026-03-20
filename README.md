@@ -1,159 +1,226 @@
-# LexiSight — Premium Handwritten OCR System
+# LexiSight
 
-> AI-powered handwritten text extraction with a modern, production-ready interface.
+> Handwritten text extraction from images — built with TrOCR, FastAPI, and OpenCV.
 
----
-
-## ✨ Features
-
-| Feature | Details |
-|---|---|
-| **OCR Engine** | `microsoft/trocr-base-handwritten` via HuggingFace Transformers |
-| **Line Detection** | OpenCV morphological dilation + contour analysis |
-| **Preprocessing** | Grayscale → CLAHE → Resize 384×384 |
-| **Post-processing** | Text cleaning, extractive summary, heading detection |
-| **Accuracy Metrics** | CER & WER via pure-Python Levenshtein (no external libs) |
-| **Backend** | FastAPI with file validation, error handling |
-| **Frontend** | Dark glassmorphism UI, drag-and-drop, live metrics |
-| **Deployment** | Docker-ready |
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=flat-square&logo=python&logoColor=white)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.111-009688?style=flat-square&logo=fastapi&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.3-EE4C2C?style=flat-square&logo=pytorch&logoColor=white)
+![OpenCV](https://img.shields.io/badge/OpenCV-4.9-5C3EE8?style=flat-square&logo=opencv&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-22C55E?style=flat-square)
 
 ---
 
-## 🗂️ Project Structure
+## What it does
+
+Upload a photo of handwritten text. LexiSight detects the lines, preprocesses each one, runs it through Microsoft's TrOCR model, and returns structured output — extracted text, a short summary, detected headings, and optionally CER/WER accuracy scores if you provide a reference.
+
+---
+
+## Demo
+
+> Run locally in demo mode (no model download needed):
+> ```powershell
+> $env:LEXISIGHT_DEMO="1"
+> python -m uvicorn app.main:app --reload --port 8000
+> ```
+> Open **http://localhost:8000**
+
+---
+
+## Project Structure
 
 ```
-lexisight/
+LexiSight/
 ├── app/
-│   ├── main.py               ← FastAPI app + endpoints
-│   ├── pipeline.py           ← OCR orchestration
+│   ├── main.py               ← FastAPI app, routes, file validation
+│   ├── pipeline.py           ← Orchestrates detect → preprocess → recognize
 │   ├── detector.py           ← OpenCV line detection
-│   ├── preprocessing.py      ← CLAHE image preprocessing
-│   ├── recognizer.py         ← TrOCR inference
-│   ├── schemas.py            ← Pydantic models
+│   ├── preprocessing.py      ← CLAHE enhancement + resize
+│   ├── recognizer.py         ← TrOCR model inference
+│   ├── schemas.py            ← Pydantic response model
+│   ├── demo_mode.py          ← Mock pipeline for local dev
 │   ├── utils/
-│   │   └── metrics.py        ← CER / WER (Levenshtein DP)
+│   │   └── metrics.py        ← CER + WER via Levenshtein distance
 │   ├── services/
-│   │   └── postprocess.py    ← clean_text, summarize, detect_headings
+│   │   └── postprocess.py    ← Text cleaning, summary, heading detection
 │   └── static/
-│       ├── index.html        ← Frontend
-│       ├── styles.css        ← Premium dark UI
-│       └── script.js         ← Drag-drop, OCR call, results render
+│       ├── index.html
+│       ├── styles.css
+│       └── script.js
+├── tests/
+│   └── test_lexisight.py
 ├── requirements.txt
 ├── Dockerfile
+├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-## 🚀 Quick Start
+## Getting Started
 
-### Local (Python 3.10+)
+### 1. Clone the repo
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the server
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+git clone https://github.com/Nithya200x/LexiSight.git
+cd LexiSight
 ```
 
-Open **http://localhost:8000** in your browser.
-
-### Docker
+### 2. Create and activate a virtual environment
 
 ```bash
-# Build image (downloads TrOCR model during build)
-docker build -t lexisight .
+# Windows
+python -m venv venv
+venv\Scripts\Activate.ps1
 
-# Run container
-docker run -p 8000:8000 lexisight
+# macOS / Linux
+python3 -m venv venv
+source venv/bin/activate
+```
+
+### 3. Install dependencies
+
+```bash
+pip install -r requirements.txt --only-binary=numpy,Pillow,opencv-python-headless,torch
+```
+
+### 4. Run the server
+
+```bash
+# With real TrOCR model (downloads ~1.3GB on first run)
+python -m uvicorn app.main:app --reload --port 8000
+
+# Without model — instant demo mode
+$env:LEXISIGHT_DEMO="1"    # Windows
+export LEXISIGHT_DEMO=1    # macOS / Linux
+python -m uvicorn app.main:app --reload --port 8000
+```
+
+Open **http://localhost:8000**
+
+---
+
+## How It Works
+
+```
+Image uploaded
+      │
+      ▼
+ detect_text_lines()     OpenCV adaptive threshold → dilation → contours
+      │
+      ▼
+ preprocess_crop()       Grayscale → CLAHE → RGB → resize 384×384
+      │
+      ▼
+ recognize_text()        TrOCR (microsoft/trocr-base-handwritten)
+      │
+      ▼
+ clean_text()            Normalize whitespace, remove noise characters
+      │
+      ▼
+ summarize()             First 1–2 sentences of extracted text
+ detect_headings()       Uppercase or short title-style lines
+      │
+      ▼
+ JSON response
 ```
 
 ---
 
-## 🌐 API
+## API
 
 ### `POST /ocr`
 
-| Field | Type | Required | Description |
-|---|---|---|---|
-| `file` | `UploadFile` | ✅ | Image (JPEG/PNG/WebP/BMP/TIFF, max 10MB) |
-| `ground_truth` | `string` | ❌ | Reference text for CER/WER evaluation |
+| Field          | Type         | Required | Description                          |
+|----------------|--------------|----------|--------------------------------------|
+| `file`         | image        | ✅        | JPEG, PNG, WebP, BMP, TIFF — max 10MB |
+| `ground_truth` | string       | ❌        | Reference text for accuracy scoring  |
 
-**Response:**
+**Response**
+
 ```json
 {
-  "text": "Hello World\nThis is a handwritten note.",
-  "summary": "Hello World. This is a handwritten note.",
-  "headings": ["HELLO WORLD"],
-  "cer": 0.0423,
-  "wer": 0.0833
+  "text": "Meeting Notes\nAttendees: Alice, Bob",
+  "summary": "Meeting Notes. Attendees include Alice and Bob.",
+  "headings": ["Meeting Notes"],
+  "cer": 0.042,
+  "wer": 0.083
 }
 ```
 
+`cer` and `wer` are `null` when no ground truth is provided.
+
 ### `GET /health`
+
 ```json
 { "status": "healthy", "service": "LexiSight OCR" }
 ```
 
 ---
 
-## 📐 Metrics
+## Accuracy Metrics
 
-Both metrics are computed without external libraries using **Levenshtein distance** via dynamic programming:
+Computed from scratch using dynamic programming — no external metric libraries.
 
-- **CER** = `edit_distance(ref_chars, hyp_chars) / len(ref_chars)`
-- **WER** = `edit_distance(ref_words, hyp_words) / len(ref_words)`
+| Metric | Formula |
+|--------|---------|
+| **CER** | `levenshtein(ref_chars, hyp_chars) / len(ref_chars)` |
+| **WER** | `levenshtein(ref_words, hyp_words) / len(ref_words)` |
 
-Values range from `0.0` (perfect) to `1.0` (completely wrong).
+Both return a value between `0.0` (perfect match) and `1.0` (no match).
 
 ---
 
-## 🖼️ How the OCR Pipeline Works
+## Docker
 
-```
-Input Image
-    ↓
-detect_text_lines()    ← OpenCV: adaptive threshold → dilation → contours
-    ↓
-For each line bounding box:
-    crop + pad
-    ↓
-preprocess_crop()      ← grayscale → CLAHE → RGB → resize 384×384
-    ↓
-recognize_text()       ← TrOCR (microsoft/trocr-base-handwritten)
-    ↓
-Combine lines → raw text
-    ↓
-clean_text()           ← normalize, remove noise
-    ↓
-summarize()            ← first 1–2 sentences
-detect_headings()      ← uppercase / short title lines
-    ↓
-OCRResponse
+```bash
+# Build
+docker build -t lexisight .
+
+# Run
+docker run -p 8000:8000 lexisight
+
+# Or with docker-compose (includes model cache volume)
+docker-compose up
 ```
 
 ---
 
-## 🛠️ Tech Stack
+## Running Tests
 
-- **Python 3.10**
-- **FastAPI** — async REST backend
-- **HuggingFace Transformers** — TrOCR model
-- **PyTorch** — inference with `torch.no_grad()`
-- **OpenCV** — image processing & text detection
-- **Pillow** — image I/O
-- **Pydantic v2** — request/response validation
+```bash
+pip install pytest
+pytest tests/ -v
+```
 
----
-
-## 📸 Best Results
-
-- Use **clear, well-lit photos** of handwritten text
-- **Black pen on white paper** works best
-- Higher resolution = better line detection
-- Provide ground truth to measure accuracy
+Tests cover the metrics, postprocessing, detector, preprocessor, and all API endpoints. The TrOCR model is mocked so no download is needed to run the test suite.
 
 ---
 
-*Built for college projects, hackathons, and portfolio showcases.*
+## Tips for Best Results
+
+- Use a **clear, well-lit photo** — avoid shadows across the text
+- **Black or dark pen on white paper** works best
+- Higher resolution images produce better line detection
+- Printed text also works, though the model is optimised for handwriting
+
+---
+
+## Tech Stack
+
+| Layer       | Technology                               |
+|-------------|------------------------------------------|
+| Model       | TrOCR — microsoft/trocr-base-handwritten |
+| Backend     | FastAPI + Uvicorn                        |
+| Image I/O   | Pillow                                   |
+| CV Pipeline | OpenCV                                   |
+| Inference   | PyTorch                                  |
+| Validation  | Pydantic v2                              |
+| Frontend    | Vanilla HTML / CSS / JS                  |
+| Tests       | pytest                                   |
+
+---
+
+## License
+
+MIT — free to use, modify, and distribute.
