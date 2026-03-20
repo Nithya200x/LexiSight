@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LexiSight — Handwritten OCR</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <!-- Ambient background orbs -->
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="bg-orb orb-3"></div>
+
+  <!-- Grain overlay -->
+  <div class="grain"></div>
+
+  <div class="layout">
+
+    <!-- ── HEADER ── -->
+    <header class="header">
+      <div class="logo-mark">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect width="32" height="32" rx="10" fill="url(#lg)"/>
+          <path d="M8 10h6M8 15h10M8 20h8" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="22" cy="11" r="4" fill="none" stroke="white" stroke-width="1.5"/>
+          <path d="M25 14l3 3" stroke="white" stroke-width="1.8" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32">
+              <stop offset="0%" stop-color="#6C63FF"/>
+              <stop offset="100%" stop-color="#2ECFB3"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <div class="header-text">
+        <h1 class="brand">LexiSight</h1>
+        <span class="tagline">Handwritten OCR Engine</span>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span>
+        AI-Powered
+      </div>
+    </header>
+
+    <!-- ── HERO ── -->
+    <section class="hero">
+      <p class="hero-sub">Upload a photo of handwritten text — get structured, AI-enhanced output instantly.</p>
+    </section>
+
+    <!-- ── MAIN CARD ── -->
+    <main class="card upload-card" id="uploadCard">
+
+      <!-- Drop zone -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept="image/jpeg,image/png,image/webp,image/bmp,image/tiff" hidden />
+
+        <div class="drop-inner" id="dropInner">
+          <div class="drop-icon">
+            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+              <path d="M24 8v24M14 18l10-10 10 10" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 36h32" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" opacity="0.4"/>
+            </svg>
+          </div>
+          <p class="drop-title">Drop your image here</p>
+          <p class="drop-sub">or <button class="link-btn" id="browseBtn">browse files</button></p>
+          <p class="drop-formats">JPEG · PNG · WebP · BMP · TIFF &nbsp;·&nbsp; max 10MB</p>
+        </div>
+
+        <!-- Preview (hidden until image selected) -->
+        <div class="preview-wrap" id="previewWrap" style="display:none">
+          <img id="previewImg" class="preview-img" alt="Preview" />
+          <div class="preview-meta" id="previewMeta"></div>
+          <button class="remove-btn" id="removeBtn" title="Remove image">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <path d="M12 4L4 12M4 4l8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Ground truth input -->
+      <div class="field-group">
+        <label class="field-label" for="groundTruth">
+          Ground Truth
+          <span class="field-badge">optional</span>
+        </label>
+        <textarea
+          id="groundTruth"
+          class="field-textarea"
+          rows="3"
+          placeholder="Paste the actual text to compute CER / WER accuracy metrics…"
+        ></textarea>
+      </div>
+
+      <!-- Submit -->
+      <button class="run-btn" id="runBtn" disabled>
+        <span class="btn-label" id="btnLabel">
+          <svg class="btn-icon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <path d="M3 9h12M9 3l6 6-6 6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          Run OCR
+        </span>
+        <span class="btn-spinner" id="btnSpinner" style="display:none">
+          <svg class="spinner-ring" width="20" height="20" viewBox="0 0 20 20" fill="none">
+            <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="2" stroke-dasharray="40 12" stroke-linecap="round"/>
+          </svg>
+          Processing…
+        </span>
+      </button>
+
+      <!-- Error message -->
+      <div class="error-banner" id="errorBanner" style="display:none">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+          <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.5"/>
+          <path d="M8 5v4M8 11v.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>
+        <span id="errorText"></span>
+      </div>
+
+    </main>
+
+    <!-- ── RESULTS ── -->
+    <section class="results-section" id="resultsSection" style="display:none">
+
+      <!-- Extracted text -->
+      <div class="card result-card" id="card-text">
+        <div class="card-header">
+          <div class="card-icon teal">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3 4h12M3 8h9M3 12h11M3 16h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Extracted Text</h2>
+          <button class="copy-btn" id="copyTextBtn" title="Copy to clipboard">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="4" y="4" width="9" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/>
+              <path d="M4 3V2a1 1 0 011-1h6a1 1 0 011 1v7a1 1 0 01-1 1h-1" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+            Copy
+          </button>
+        </div>
+        <pre class="text-output" id="textOutput"></pre>
+      </div>
+
+      <!-- Summary + Headings row -->
+      <div class="two-col">
+
+        <!-- Summary -->
+        <div class="card result-card" id="card-summary">
+          <div class="card-header">
+            <div class="card-icon violet">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M2 5a3 3 0 013-3h8a3 3 0 013 3v8a3 3 0 01-3 3H5a3 3 0 01-3-3V5z" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M6 7h6M6 10h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <h2 class="card-title">Summary</h2>
+          </div>
+          <p class="summary-text" id="summaryOutput"></p>
+        </div>
+
+        <!-- Headings -->
+        <div class="card result-card" id="card-headings">
+          <div class="card-header">
+            <div class="card-icon amber">
+              <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+                <path d="M3 4h4v10H3M11 4h4v10h-4M7 9h4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h2 class="card-title">Headings</h2>
+          </div>
+          <ul class="headings-list" id="headingsOutput"></ul>
+          <p class="empty-state" id="headingsEmpty" style="display:none">No headings detected</p>
+        </div>
+
+      </div>
+
+      <!-- Metrics row -->
+      <div class="card result-card metrics-card" id="card-metrics" style="display:none">
+        <div class="card-header">
+          <div class="card-icon rose">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+              <path d="M3 13l4-5 3 3 3-6 4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <h2 class="card-title">Accuracy Metrics</h2>
+          <span class="metrics-sub">vs. ground truth</span>
+        </div>
+        <div class="metrics-grid">
+          <div class="metric-block" id="cerBlock">
+            <div class="metric-label">CER</div>
+            <div class="metric-value" id="cerValue">—</div>
+            <div class="metric-desc">Character Error Rate</div>
+            <div class="metric-bar"><div class="metric-fill" id="cerFill"></div></div>
+          </div>
+          <div class="metric-block" id="werBlock">
+            <div class="metric-label">WER</div>
+            <div class="metric-value" id="werValue">—</div>
+            <div class="metric-desc">Word Error Rate</div>
+            <div class="metric-bar"><div class="metric-fill" id="werFill"></div></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ── FOOTER ── -->
+    <footer class="footer">
+      <span>LexiSight © 2025</span>
+      <span class="footer-sep">·</span>
+      <span>Powered by TrOCR + FastAPI</span>
+    </footer>
+
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
