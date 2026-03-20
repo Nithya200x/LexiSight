@@ -2,10 +2,11 @@
 title: LexiSight
 emoji: 📝
 colorFrom: indigo
-colorTo: teal
+colorTo: purple
 sdk: docker
 pinned: false
 ---
+
 # LexiSight
 
 > Handwritten text extraction from images — built with TrOCR, FastAPI, and OpenCV.
